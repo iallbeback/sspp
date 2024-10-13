@@ -1,6 +1,9 @@
 #include <iostream>
+#include <stdlib.h>
+#include <stdio.h> 
 #include <vector>
 #include "papi.h"
+#include <fstream>
 
 // Глобальные переменные для хранения графа в формате CSR (Compressed Sparse Row)
 unsigned int row_count; // количество вершин в графе
@@ -66,7 +69,7 @@ unsigned int max_ves_vertex() {
 double W(int n) {
     double res = 0;
     for (unsigned int j = row_ptr[n]; j < row_ptr[n + 1]; j++) {
-        res += vals[j] * (row_ptr[col_ids[j + 1]] - row_ptr[col_ids[j]]); // пример вычисления на основе соседних рёбер
+        res += vals[j] * (row_ptr[col_ids[j] + 1] - row_ptr[col_ids[j]]); // пример вычисления на основе соседних рёбер
     }
     return res;
 }
@@ -108,6 +111,9 @@ void reset_graph() {
 #define N_TESTS 5 // количество тестов
 
 int main() {
+	std::ofstream out;
+	out.open("test.txt");
+	
     int retval, EventSet = PAPI_NULL; // переменные для работы с PAPI
     long long cm[3]; // массив для хранения результатов замеров
     
@@ -122,7 +128,10 @@ int main() {
     int EventCode0 = PAPI_L1_TCM; // промахи в L1 кэше
     int EventCode1 = PAPI_L2_TCM; // промахи в L2 кэше
     int EventCode2; // общее количество выполненных циклов
-    PAPI_event_name_to_code("perf::CPU-CYCLES", &EventCode2);
+	//char event_name[] = "perf::CPU-CYCLES";
+	char event_name[] = "CPU-CYCLES";
+	PAPI_event_name_to_code(event_name, &EventCode2);
+    //PAPI_event_name_to_code("perf::PAPI_LD_INS", &EventCode2);
 
     // Создание набора событий
     PAPI_create_eventset(&EventSet);
@@ -136,33 +145,54 @@ int main() {
     // Цикл по всем тестам
     for (int n_test = 0; n_test < N_TESTS; n_test++) {
         std::cout << filenames[n_test] << std::endl;
+		out << filenames[n_test] << std::endl;
         read_graph(filenames[n_test]); // читаем граф из файла
+		out << "Row_count = " << row_count << ", col_count = " << col_count << std::endl;
 
         std::cout << '\n';
+		out << '\n';
 
         // Начинаем замер производительности для функции max_ves_vertex
         PAPI_start(EventSet);
+		
         std::cout << "Вершина с наибольшим весом: " << max_ves_vertex() << std::endl;
+		out << "Вершина с наибольшим весом: " << max_ves_vertex() << std::endl;
+		
         PAPI_stop(EventSet, cm); // останавливаем замеры и сохраняем результаты
         PAPI_reset(EventSet); // сбрасываем счётчики
-        std::cout << "Количество промахов L1 кэша: " << cm[0] << std::endl;
-        std::cout << "Количество промахов L2 кэша: " << cm[1] << std::endl;
-        std::cout << "Количество выполненных циклов: " << cm[2] << std::endl;
+		
+        std::cout << "Количество промахов L1 кэша: \t" << cm[0] << std::endl;
+		out << "Количество промахов L1 кэша: \t" << cm[0] << std::endl;
+		
+        std::cout << "Количество промахов L2 кэша: \t" << cm[1] << std::endl;
+		out << "Количество промахов L2 кэша: \t" << cm[1] << std::endl;
+		
+        std::cout << "Количество выполненных циклов: \t" << cm[2] << std::endl;
+		out << "Количество выполненных циклов: \t" << cm[2] << std::endl;
 
         std::cout << '\n';
+		out << '\n';
 
         // Начинаем замер производительности для функции max_rang_vertex
         PAPI_start(EventSet);        
         std::cout << "Вершина с наибольшим рангом: " << max_rang_vertex() << std::endl;
+		out << "Вершина с наибольшим рангом: " << max_rang_vertex() << std::endl;
+		
         PAPI_stop(EventSet, cm); // останавливаем замеры и сохраняем результаты
         PAPI_reset(EventSet); // сбрасываем счётчики
-        std::cout << "Количество промахов L1 кэша: " << cm[0] << std::endl;
-        std::cout << "Количество промахов L2 кэша: " << cm[1] << std::endl;
-        std::cout << "Количество выполненных циклов: " << cm[2] << std::endl;
+		
+        std::cout << "Количество промахов L1 кэша: \t" << cm[0] << std::endl;
+		out << "Количество промахов L1 кэша: \t" << cm[0] << std::endl;
+        std::cout << "Количество промахов L2 кэша: \t" << cm[1] << std::endl;
+		out << "Количество промахов L2 кэша: \t" << cm[1] << std::endl;
+        std::cout << "Количество выполненных циклов: \t" << cm[2] << std::endl;
+		out << "Количество выполненных циклов: \t" << cm[2] << std::endl;
 
         std::cout << '\n';
+		out << '\n';
     }
 
     // Завершение работы библиотеки PAPI
     PAPI_shutdown();
+	out.close();
 }
