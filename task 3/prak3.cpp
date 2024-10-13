@@ -125,8 +125,8 @@ int main() {
     }
 
     // Определение событий для замеров
-    int EventCode0 = PAPI_L1_TCM; // промахи в L1 кэше
-    int EventCode1 = PAPI_L2_TCM; // промахи в L2 кэше
+    int EventCode0 = PAPI_L1_DCM; // промахи в L1 кэше
+    int EventCode1 = PAPI_L2_DCM; // промахи в L2 кэше
     int EventCode2; // общее количество выполненных циклов
 	//char event_name[] = "perf::CPU-CYCLES";
 	char event_name[] = "CPU-CYCLES";
