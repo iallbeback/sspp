@@ -9,6 +9,61 @@ void init_matrix(double* mat, int N) {
     }
 }
 
+void print_matrix(double* mat, int N) {
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            printf("%f \t", mat[i * N + j]);
+        }
+        printf("\n");
+    }
+}
+
+void print_matrices_and_diff_to_file(double* mat1, double* mat2, int N, const char* filename) {
+    FILE* file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error opening file %s for writing!\n", filename);
+        return;
+    }
+
+    fprintf(file, "Matrix 1 (Sequential result):\n");
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            fprintf(file, "%f ", mat1[i * N + j]);
+        }
+        fprintf(file, "\n");
+    }
+
+    fprintf(file, "\nMatrix 2 (AVX result):\n");
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            fprintf(file, "%f ", mat2[i * N + j]);
+        }
+        fprintf(file, "\n");
+    }
+
+    fprintf(file, "\nMatrix Difference (Matrix 1 - Matrix 2):\n");
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            double diff = mat1[i * N + j] - mat2[i * N + j];
+            fprintf(file, "%f ", diff);
+        }
+        fprintf(file, "\n");
+    }
+
+    fclose(file);
+}
+
+int are_matrices_equal(double* mat1, double* mat2, int N) {
+    for (int i = 0; i < N * N; i++) {
+		double dif = mat1[i] - mat2[i];
+		if(mat1[i] - mat2[i] < 0) dif*=-1; 
+        if (dif > 0.00001) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 void matmul_sequential(double* A, double* B, double* C, int N) {
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
@@ -21,29 +76,47 @@ void matmul_sequential(double* A, double* B, double* C, int N) {
     }
 }
 
-void matmul_avx(double* A, double* B, double* C, int N) {
+void transpose(double* B, double* B_T, int N) {
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
+            B_T[j * N + i] = B[i * N + j];
+        }
+    }
+}
+
+void matmul_avx(double* A, double* B, double* B_T, double* C, int N) {
+	transpose(B, B_T, N);
+    for (int d = 0; d < 2 * N - 1; d++) {
+        int i_start = (d < N) ? 0 : d - N + 1;
+        int i_end = (d < N) ? d : N - 1;
+
+        for (int i = i_start; i <= i_end; i++) {
+            int j = d - i;  
+
             __m256d c_vec = _mm256_setzero_pd();
 
-            for (int k = 0; k < N; k += 4) {
+            for (int k = 0; k < N; k += 4) {  
                 __m256d a_vec = _mm256_loadu_pd(&A[i * N + k]);
-                __m256d b_vec = _mm256_loadu_pd(&B[k * N + j]);
+                __m256d b_vec = _mm256_loadu_pd(&B_T[j * N + k]);
+
                 c_vec = _mm256_add_pd(c_vec, _mm256_mul_pd(a_vec, b_vec));
             }
 
-            _mm256_storeu_pd(&C[i * N + j], c_vec);
+            double temp[4];
+            _mm256_storeu_pd(temp, c_vec);
+            C[i * N + j] = temp[0] + temp[1] + temp[2] + temp[3];
         }
     }
 }
 
 void benchmark(int N) {
-    double *A, *B, *C_seq, *C_avx;
+    double *A, *B, *B_T, *C_seq, *C_avx;
 
-    posix_memalign((void**)&A, 32, N * N * sizeof(double));
-    posix_memalign((void**)&B, 32, N * N * sizeof(double));
-    posix_memalign((void**)&C_seq, 32, N * N * sizeof(double));
-    posix_memalign((void**)&C_avx, 32, N * N * sizeof(double));
+    int r = posix_memalign((void**)&A, 32, N * N * sizeof(double));
+    r = posix_memalign((void**)&B, 32, N * N * sizeof(double));
+	r = posix_memalign((void**)&B_T, 32, N * N * sizeof(double));
+    r = posix_memalign((void**)&C_seq, 32, N * N * sizeof(double));
+    r = posix_memalign((void**)&C_avx, 32, N * N * sizeof(double));
 
     init_matrix(A, N);
     init_matrix(B, N);
@@ -55,10 +128,24 @@ void benchmark(int N) {
     printf("N = %d, seq mull:\t %f secs\n", N, time_taken_seq);
 
     clock_t start_avx = clock();
-    matmul_avx(A, B, C_avx, N);
+    matmul_avx(A, B, B_T, C_avx, N);
     clock_t end_avx = clock();
     double time_taken_avx = (double)(end_avx - start_avx) / CLOCKS_PER_SEC;
     printf("N = %d, AVX mull:\t %f secs\n", N, time_taken_avx);
+	
+	//printf("Seq mull:\n");
+    //print_matrix(C_seq, N);
+	//printf("AVX mull:\n");
+    //print_matrix(C_avx, N);
+	
+	if(N==8) print_matrices_and_diff_to_file(C_seq, C_avx, N, "matrices_and_diff.txt");
+	
+	if(are_matrices_equal(C_seq, C_avx, N)){
+		printf("equal\n");
+	}
+	else {
+		printf("not equal!!!\n");
+	}
 
     free(A);
     free(B);
@@ -69,7 +156,7 @@ void benchmark(int N) {
 int main() {
     srand(time(NULL));
 
-    int sizes[] = {512, 1024, 2048}; 
+    int sizes[] = {8, 512, 1024, 2048}; 
     int num_sizes = sizeof(sizes) / sizeof(sizes[0]);
 
     for (int i = 0; i < num_sizes; i++) {
