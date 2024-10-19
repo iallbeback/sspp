@@ -1,28 +1,37 @@
 Это 4-ое задание. Программа тестировалась на линуксе внтури виртуальной машине. 
 Upd: были добавленны проверки равенства матриц, если они равны, то будет писаться "equal". Кроме того, для случая N = 8 (введён для отладки) идёт запись в файл самих матриц и их разницы. Проверка рвенства идёт с точностью 0.00001, чтобы не возникали проблемы округления
+
+
 Вот сами результаты:
 
-N = 8, seq mull:  0.000002 secs
+N = 8, seq mull:  0.000000 secs
 
-N = 8, AVX mull:  0.000001 secs
+N = 8, AVX mull:  0.000000 secs
 
-equal
-
-N = 512, seq mull:  0.205004 secs
-
-N = 512, AVX mull:  0.041268 secs
+N = 8, AVX diag mull:  0.000001 secs
 
 equal
 
-N = 1024, seq mull:  2.328968 secs
+N = 512, seq mull:  0.236113 secs
 
-N = 1024, AVX mull:  0.555256 secs
+N = 512, AVX mull:  0.045352 secs
 
-equal
-
-N = 2048, seq mull:  75.320364 secs
-
-N = 2048, AVX mull:  5.958108 secs
+N = 512, AVX diag mull:  0.044241 secs
 
 equal
 
+N = 1024, seq mull:  2.542099 secs
+
+N = 1024, AVX mull:  0.496157 secs
+
+N = 1024, AVX diag mull:  0.790418 secs
+
+equal
+
+N = 2048, seq mull:  85.809644 secs
+
+N = 2048, AVX mull:  4.381348 secs
+
+N = 2048, AVX diag mull:  7.825895 secs
+
+equal
