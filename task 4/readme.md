@@ -1,10 +1,12 @@
 Это 4-ое задание. Программа тестировалась на линуксе внтури виртуальной машине. 
-Upd: были добавленны проверки равенства матриц, если они равны, то будет писаться "equal". Кроме того, для случая N = 8 (введён для отладки) идёт запись в файл самих матриц и их разницы. Проверка рвенства идёт с точностью 0.00001, чтобы не возникали проблемы округления
+Upd2: теперь идёт сравнение между 4-мя алгоритмами, 
 
 
 Вот сами результаты:
 
 N = 8, seq mull:  0.000000 secs
+
+N = 8, diag mull:  0.000001 secs
 
 N = 8, AVX mull:  0.000000 secs
 
@@ -12,26 +14,32 @@ N = 8, AVX diag mull:  0.000001 secs
 
 equal
 
-N = 512, seq mull:  0.236113 secs
+N = 512, seq mull:  0.249488 secs
 
-N = 512, AVX mull:  0.045352 secs
+N = 512, diag mull:  0.276892 secs
 
-N = 512, AVX diag mull:  0.044241 secs
+N = 512, AVX mull:  0.051912 secs
 
-equal
-
-N = 1024, seq mull:  2.542099 secs
-
-N = 1024, AVX mull:  0.496157 secs
-
-N = 1024, AVX diag mull:  0.790418 secs
+N = 512, AVX diag mull:  0.055954 secs
 
 equal
 
-N = 2048, seq mull:  85.809644 secs
+N = 1024, seq mull:  2.987789 secs
 
-N = 2048, AVX mull:  4.381348 secs
+N = 1024, diag mull:  3.281205 secs
 
-N = 2048, AVX diag mull:  7.825895 secs
+N = 1024, AVX mull:  0.516477 secs
+
+N = 1024, AVX diag mull:  0.780443 secs
+
+equal
+
+N = 2048, seq mull:  88.709071 secs
+
+N = 2048, diag mull:  88.126881 secs
+
+N = 2048, AVX mull:  4.357535 secs
+
+N = 2048, AVX diag mull:  8.505144 secs
 
 equal
