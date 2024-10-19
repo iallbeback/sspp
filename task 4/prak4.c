@@ -131,9 +131,12 @@ void matmul_avx(double* A, double* B, double* B_T, double* C, int N) {
                 c_vec = _mm256_add_pd(c_vec, _mm256_mul_pd(a_vec, b_vec));
             }
 
-            double c[4];
-            _mm256_storeu_pd(c, c_vec);
-            C[i * N + j] = c[0] + c[1] + c[2] + c[3];
+            //double c[4];
+            //_mm256_storeu_pd(c, c_vec);
+            //C[i * N + j] = c[0] + c[1] + c[2] + c[3];
+			__m256d hsum = _mm256_hadd_pd(c_vec, c_vec);
+            double result = ((double*)&hsum)[0] + ((double*)&hsum)[2];
+            C[i * N + j] = result;
         }
     }
 }
@@ -156,9 +159,12 @@ void matmul_avx_d(double* A, double* B, double* B_T, double* C, int N) {
                 c_vec = _mm256_add_pd(c_vec, _mm256_mul_pd(a_vec, b_vec));
             }
 
-            double temp[4];
-            _mm256_storeu_pd(temp, c_vec);
-            C[i * N + j] = temp[0] + temp[1] + temp[2] + temp[3];
+            //double temp[4];
+            //_mm256_storeu_pd(temp, c_vec);
+            //C[i * N + j] = temp[0] + temp[1] + temp[2] + temp[3];
+			__m256d hsum = _mm256_hadd_pd(c_vec, c_vec);
+            double result = ((double*)&hsum)[0] + ((double*)&hsum)[2];
+            C[i * N + j] = result;
         }
     }
 }
