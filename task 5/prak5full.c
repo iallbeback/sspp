@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
     double p = atof(argv[5]);
     int P = atoi(argv[6]);
 
-    int test_N[] = {1000, 5000, 10000, 50000};
+    int test_N[] = {100, 1000, 10000, 100000, 1000000};
     int test_P[] = {1, 2, 4, 8, 16};
     int num_tests_N = sizeof(test_N) / sizeof(test_N[0]);
     int num_tests_P = sizeof(test_P) / sizeof(test_P[0]);
