@@ -21,6 +21,37 @@ void merge(int *A, int *B, int left, int mid, int right) {
     for (i = left; i < right; i++) A[i] = B[i];
 }
 
+void heapify(int *arr, int n, int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < n && arr[left] > arr[largest])
+        largest = left;
+
+    if (right < n && arr[right] > arr[largest])
+        largest = right;
+
+    if (largest != i) {
+        int temp = arr[i];
+        arr[i] = arr[largest];
+        arr[largest] = temp;
+        heapify(arr, n, largest);
+    }
+}
+
+void heap_sort(int *arr, int n) {
+    for (int i = n / 2 - 1; i >= 0; i--)
+        heapify(arr, n, i);
+
+    for (int i = n - 1; i > 0; i--) {
+        int temp = arr[0];
+        arr[0] = arr[i];
+        arr[i] = temp;
+        heapify(arr, i, 0);
+    }
+}
+
 void parallel_merge_sort(int *A, int *B, int left, int right, int depth) {
     if (right - left <= 1) return;
     
@@ -36,7 +67,7 @@ void parallel_merge_sort(int *A, int *B, int left, int right, int depth) {
         #pragma omp taskwait
         merge(A, B, left, mid, right);
     } else {
-        qsort(A + left, right - left, sizeof(int), compare);
+        heap_sort(A + left, right - left);
     }
 }
 
@@ -66,18 +97,15 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    // Инициализация массива случайными значениями с сидом по времени
     srand(time(NULL));
     for (int i = 0; i < N; i++) {
         A[i] = rand();
     }
 
-    // Копирование массива для qsort
     for (int i = 0; i < N; i++) {
         C[i] = A[i];
     }
 
-    // Открытие файла для записи результатов
     FILE *file = fopen("result.txt", "w");
     if (file == NULL) {
         perror("Failed to open result.txt");
@@ -87,7 +115,6 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    // Время выполнения qsort
     double start_time = omp_get_wtime();
     qsort(C, N, sizeof(int), compare);
     double end_time = omp_get_wtime();
@@ -96,12 +123,10 @@ int main(int argc, char *argv[]) {
     printf("qsort time:\t%f seconds\n\n", qsort_time);
     fprintf(file, "qsort time:\t%f seconds\n\n", qsort_time);
 
-    // Копируем исходный массив A, чтобы сортировать заново при каждом p
     for (int j = 0; j < N; j++) {
         B[j] = A[j];
     }
 
-    // Время параллельной сортировки с введенным значением p
     start_time = omp_get_wtime();
     
     #pragma omp parallel num_threads(p)
@@ -113,11 +138,9 @@ int main(int argc, char *argv[]) {
     end_time = omp_get_wtime();
     double parallel_time = end_time - start_time;
 
-    // Проверка идентичности массивов
     bool is_equal = arrays_are_equal(B, C, N);
     double percentage = (parallel_time / qsort_time) * 100;
 
-    // Вывод результатов на экран и в файл
     printf("Threads:\t%d\n", p);
     printf("Parallel:\t%f seconds\n", parallel_time);
     printf("Par/qsort:\t%.2f%%\n", percentage);
@@ -128,10 +151,8 @@ int main(int argc, char *argv[]) {
     fprintf(file, "Par/qsort:\t%.2f%%\n", percentage);
     fprintf(file, "Arr %s\n\n", is_equal ? "equal" : "diff");
 
-    // Дополнительные тесты для p = 1, 2, 4, 8, 16
     int thread_counts[] = {1, 2, 4, 8, 16};
     
-    // Массивы для хранения результатов
     double times[5];
     double speeds[5];
     double efficiencies[5];
@@ -139,12 +160,10 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < sizeof(thread_counts) / sizeof(thread_counts[0]); i++) {
         p = thread_counts[i];
 
-        // Копируем исходный массив A, чтобы сортировать заново при каждом p
         for (int j = 0; j < N; j++) {
             B[j] = A[j];
         }
 
-        // Время параллельной сортировки
         start_time = omp_get_wtime();
         
         #pragma omp parallel num_threads(p)
@@ -156,20 +175,16 @@ int main(int argc, char *argv[]) {
         end_time = omp_get_wtime();
         double parallel_time = end_time - start_time;
 
-        // Проверка идентичности массивов
         is_equal = arrays_are_equal(B, C, N);
         percentage = (parallel_time / qsort_time) * 100;
 
-        // Вычисление ускорения и эффективности
-        double S = qsort_time / parallel_time;  // Ускорение
-        double E = S / p;  // Эффективность
+        double S = qsort_time / parallel_time;
+        double E = S / p;
 
-        // Сохранение результатов для таблицы
         times[i] = parallel_time;
         speeds[i] = S;
         efficiencies[i] = E;
 
-        // Вывод результатов на экран и в файл
         printf("Threads:\t%d\n", p);
         printf("Parallel:\t%f seconds\n", parallel_time);
         printf("Par/qsort:\t%.2f%%\n", percentage);
@@ -181,7 +196,6 @@ int main(int argc, char *argv[]) {
         fprintf(file, "Arr %s\n\n", is_equal ? "equal" : "diff");
     }
 
-    // Вывод таблицы результатов
     printf("\nResults Table:\n");
     printf("Threads\tTime (s)\tSpeedup\tEfficiency\n");
     fprintf(file, "\nResults Table:\n");
@@ -192,7 +206,6 @@ int main(int argc, char *argv[]) {
         fprintf(file, "%d\t%f\t%f\t%f\n", thread_counts[i], times[i], speeds[i], efficiencies[i]);
     }
 
-    // Закрытие файла и освобождение памяти
     fclose(file);
     free(A);
     free(B);
