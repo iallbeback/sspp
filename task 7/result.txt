@@ -1,0 +1,24 @@
+Total number of processes:	8
+Norms are equal within DOUBLESEX	0.10
+Time for computation:	7.827317 seconds
+
+Total number of processes:	16
+Norms are equal within DOUBLESEX	0.10
+Time for computation:	4.997679 seconds
+
+Total number of processes:	4
+Norms are equal within DOUBLESEX	0.10
+Time for computation:	15.377360 seconds
+
+Total number of processes:	32
+Norms are equal within DOUBLESEX	0.10
+Time for computation:	2.648649 seconds
+
+Total number of processes:	2
+Norms are equal within DOUBLESEX	0.10
+Time for computation:	29.521869 seconds
+
+Total number of processes:	1
+Norms are equal within DOUBLESEX	0.10
+Time for computation:	57.805732 seconds
+
